@@ -1,4 +1,4 @@
-name: CI/CD - Deploy Backend to VPS
+name: Backend CI
 
 on:
   push:
@@ -9,10 +9,6 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: backend-production-deploy
-  cancel-in-progress: false
 
 jobs:
   ci:
@@ -37,30 +33,3 @@ jobs:
 
       - name: Build application
         run: npm run build
-
-  deploy:
-    name: Deploy to VPS
-    needs: ci
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-      - name: Update server over SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_VPS }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          port: 22
-          command_timeout: 20m
-          script_stop: true
-          script: |
-            set -eu
-            cd "${{ vars.VPS_APP_DIR }}"
-            git pull --ff-only origin main
-            npm ci
-            npm run build
-            pm2 reload "${{ vars.PM2_APP_NAME || 'backend' }}" --update-env || \
-              pm2 start dist/server.cjs --name "${{ vars.PM2_APP_NAME || 'backend' }}"
-            pm2 save
