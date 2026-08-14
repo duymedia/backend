@@ -56,8 +56,5 @@ jobs:
             set -eu
             cd "${{ vars.VPS_APP_DIR }}"
             git pull --ff-only origin main
-            npm ci
-            npm run build
-            pm2 reload "${{ vars.PM2_APP_NAME || 'backend' }}" --update-env || \
-              pm2 start dist/server.cjs --name "${{ vars.PM2_APP_NAME || 'backend' }}"
-            pm2 save
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
