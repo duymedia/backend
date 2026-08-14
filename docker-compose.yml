@@ -46,7 +46,8 @@ services:
       MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
       MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
     ports:
-      - "3000:3000"
+      # Nginx on the VPS is the only public entry point.
+      - "127.0.0.1:3000:3000"
 
 volumes:
   mysql_data:
