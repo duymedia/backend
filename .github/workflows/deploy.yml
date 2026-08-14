@@ -33,3 +33,31 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  deploy-vps:
+    name: Deploy to VPS
+    needs: ci
+    # Deployment is enabled after VPS_APP_DIR is configured as a repository variable.
+    if: github.event_name != 'pull_request' && vars.VPS_APP_DIR != ''
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Connect and deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SSH_VPS }}
+          port: 22
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          command_timeout: 20m
+          script_stop: true
+          script: |
+            set -eu
+            cd "${{ vars.VPS_APP_DIR }}"
+            git pull --ff-only origin main
+            npm ci
+            npm run build
+            pm2 reload "${{ vars.PM2_APP_NAME || 'backend' }}" --update-env || \
+              pm2 start dist/server.cjs --name "${{ vars.PM2_APP_NAME || 'backend' }}"
+            pm2 save
