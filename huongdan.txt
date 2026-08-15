@@ -1,0 +1,108 @@
+CI/CD GitHub Actions -> Ubuntu VPS (Docker)
+==============================================
+
+Muc tieu
+--------
+Push vao main -> GitHub kiem tra lint/build -> SSH VPS -> Docker build va restart.
+
+1. GitHub Secrets
+-----------------
+Repository -> Settings -> Secrets and variables -> Actions -> New repository secret:
+
+  SSH_VPS   = 103.229.52.143
+  USERNAME  = root
+  PASSWORD  = mat khau SSH cua VPS
+  SSH_PORT  = 22                 (tuy chon; workflow tu dung 22 neu bo trong)
+
+Khong ghi cac gia tri nay vao file YAML hay commit len GitHub.
+
+2. Day cau hinh len GitHub
+--------------------------
+Tai may local, trong thu muc backend:
+
+  git add .
+  git commit -m "Configure Docker VPS deployment"
+  git push origin main
+
+Kiem tra repository da co: Dockerfile, docker-compose.yml,
+.env.vps.example, deploy/vps/setup.sh va .github/workflows/backend-cicd.yml.
+
+3. Cai dat VPS (chi lam mot lan)
+---------------------------------
+SSH vao VPS:
+
+  ssh root@103.229.52.143
+
+Clone repo va cai Docker/Nginx:
+
+  git clone https://github.com/duymedia/backend.git /opt/velocart-backend
+  cd /opt/velocart-backend
+  bash deploy/vps/setup.sh
+
+Neu thu muc da ton tai thi dung:
+
+  cd /opt/velocart-backend
+  git pull --ff-only origin main
+  bash deploy/vps/setup.sh
+
+4. Tao bien moi truong tren VPS (chi lam mot lan)
+--------------------------------------------------
+
+  cd /opt/velocart-backend
+  cp .env.vps.example .env
+  nano .env
+
+Thay 3 gia tri placeholder sau bang gia tri manh, rieng tu:
+
+  JWT_SECRET
+  MYSQL_ROOT_PASSWORD
+  MYSQL_PASSWORD
+
+Tao chuoi ngau nhien:
+
+  openssl rand -hex 32
+
+Luu Nano: Ctrl+O, Enter, Ctrl+X.
+
+5. Chay lan dau va kiem tra
+---------------------------
+
+  cd /opt/velocart-backend
+  docker compose up -d --build
+  docker compose ps
+  docker compose logs --tail=100 backend
+
+Mo trinh duyet: http://103.229.52.143
+
+6. Deploy tu dong
+-----------------
+Moi lan thay doi code:
+
+  git add .
+  git commit -m "Your change"
+  git push origin main
+
+Vao GitHub -> Actions -> CI/CD VPS de xem ket qua. Khi job ci thanh cong,
+job deploy se chay len VPS. Co the bam Re-run failed jobs sau khi sua VPS.
+
+7. Loi thuong gap
+-----------------
+"docker: command not found"
+  Chay lai: bash deploy/vps/setup.sh
+
+"env file .env not found"
+  Chay: cp .env.vps.example .env, sau do dien secret.
+
+SSH timeout / authentication failed
+  Kiem tra SSH_VPS, USERNAME=root, PASSWORD va port 22 trong GitHub Secrets.
+  Tren VPS: ufw allow 22/tcp
+
+Web khong mo duoc
+  Kiem tra: docker compose ps
+  Kiem tra: systemctl status nginx
+  Mo firewall: ufw allow 80/tcp
+
+SQL va du lieu
+--------------
+database.sql tu chay duy nhat khi MySQL tao volume lan dau. Khong chay
+docker compose down -v tren production, vi no xoa database va import lai SQL.

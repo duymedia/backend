@@ -1,4 +1,4 @@
-name: Backend CI and Deploy VPS
+name: CI/CD VPS
 
 on:
   push:
@@ -10,40 +10,30 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: vps-production
+  cancel-in-progress: true
+
 jobs:
   ci:
-    name: Lint and build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
 
-      - name: Type check
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
-
-  deploy-vps:
-    name: Deploy to VPS
+  deploy:
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
-      - name: Update and restart Docker services
-        uses: appleboy/ssh-action@v1.2.0
+      - uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_VPS }}
           username: ${{ secrets.USERNAME }}
