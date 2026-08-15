@@ -11,10 +11,10 @@ import {
   Menu,
   MessageSquare,
   Megaphone,
-  Omega,
   PanelsTopLeft,
   Search,
   Settings,
+  ShoppingBag,
   Star,
   Tag,
   Users,
@@ -153,7 +153,7 @@ export default function Sidebar({
         </button>
         <div className="flex items-center flex-1 min-w-0 gap-2">
           <div className="flex items-center justify-center text-white bg-blue-600 rounded-lg shadow-sm h-9 w-9 shrink-0">
-            <Omega className="w-5 h-5" />
+            <ShoppingBag className="w-5 h-5" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-extrabold leading-5 truncate text-slate-950">{storeName}</p>
@@ -212,7 +212,7 @@ export default function Sidebar({
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-10 h-10 text-white bg-blue-600 rounded-lg">
-                  <Omega className="w-5 h-5" />
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-sm font-extrabold text-slate-950">{storeName}</p>
@@ -256,7 +256,7 @@ export default function Sidebar({
           <div className={`flex border-b border-slate-100 pb-4 ${isCollapsed ? 'flex-col items-center gap-3' : 'items-center justify-between'}`}>
             <div className="flex items-center min-w-0 gap-3">
               <div className="flex items-center justify-center text-white bg-blue-600 rounded-lg shadow-sm h-9 w-9 shrink-0">
-                <Omega className="w-5 h-5" />
+                <ShoppingBag className="w-5 h-5" />
               </div>
               {!isCollapsed && (
                 <div className="min-w-0">
@@ -349,4 +349,3 @@ function AccountFooter({
     </div>
   );
 }
-
