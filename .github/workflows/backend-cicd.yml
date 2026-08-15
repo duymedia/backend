@@ -1,4 +1,4 @@
-name: Backend CI
+name: Backend CI and Deploy VPS
 
 on:
   push:
@@ -33,3 +33,27 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  deploy-vps:
+    name: Deploy to VPS
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Update and restart Docker services
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_VPS }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -eu
+            cd /opt/velocart-backend
+            git fetch origin main
+            git checkout --detach origin/main
+            docker compose up -d --build --remove-orphans
+            docker compose ps
