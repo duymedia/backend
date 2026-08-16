@@ -29,15 +29,27 @@ type AuthPortalRole = 'admin' | 'seller';
 
 const AUTH_STORAGE_KEY = 'omni_auth_session';
 const LEGACY_AUTH_STORAGE_KEY = 'omni_auth_user';
+const ADMIN_BASE_PATH = '/admin';
+
+const adminPath = (path = '/') => {
+  const normalizedPath = path === '/' ? '' : `/${path.replace(/^\/+/, '')}`;
+  return `${ADMIN_BASE_PATH}${normalizedPath}`;
+};
+
+const stripAdminBasePath = (pathname: string) => {
+  if (!pathname.startsWith(ADMIN_BASE_PATH)) return pathname;
+  return pathname.slice(ADMIN_BASE_PATH.length) || '/';
+};
 
 const getLoginRoleFromPath = (): AuthPortalRole | null => {
   const path = window.location.pathname.toLowerCase();
   if (path === '/admin/auth/login') return 'admin';
-  if (path === '/seller/auth/login') return 'seller';
+  if (path === '/admin/seller/auth/login') return 'seller';
   return null;
 };
 
-const getLoginPathForRole = (role: AuthPortalRole) => `/${role}/auth/login`;
+const getLoginPathForRole = (role: AuthPortalRole) =>
+  role === 'admin' ? adminPath('/auth/login') : adminPath('/seller/auth/login');
 
 const readStoredAuthSession = (): AuthSession | null => {
   try {
@@ -133,7 +145,7 @@ export default function App() {
   }, []);
 
   const getSectionFromPath = () => {
-    const path = window.location.pathname.replace(/^\//, '') || 'dashboard';
+    const path = stripAdminBasePath(window.location.pathname).replace(/^\//, '') || 'dashboard';
     return ['dashboard', 'products', 'categories', 'banners', 'orders', 'customers', 'reviews', 'support', 'marketing', 'notifications', 'settings'].includes(path) ? path : 'dashboard';
   };
 
@@ -185,7 +197,7 @@ export default function App() {
   }, []);
 
   const handleNavigate = (section: string) => {
-    const targetPath = section === 'dashboard' ? '/' : `/${section}`;
+    const targetPath = section === 'dashboard' ? adminPath() : adminPath(section);
     if (window.location.pathname !== targetPath) {
       window.history.pushState(null, '', targetPath);
     }
@@ -196,7 +208,7 @@ export default function App() {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
     setAuthSession(session);
-    window.history.replaceState(null, '', '/');
+    window.history.replaceState(null, '', adminPath());
     setCurrentSection('dashboard');
   };
 

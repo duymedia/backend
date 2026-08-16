@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
   const apiTarget = env.APP_URL || env.VITE_APP_URL || 'http://localhost:3000';
 
   return {
+    // The production admin portal is published through the main site at /admin/.
+    // Keep the development server at the root for a simple local workflow.
+    base: mode === 'production' ? (env.ADMIN_BASE_PATH || '/admin/') : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
